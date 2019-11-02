@@ -28,14 +28,16 @@ async function getWeatherForCities() {
         let weatherResponse = await rp({ url: `http://api.openweathermap.org/data/2.5/forecast?q=${city},${countryCode}&mode=json&appid=${apiKey}`, json: true});
         results.push ({ city, countryCode, list: weatherResponse.list, weatherResponse });
     }
-
+  
+/* summarize the API's response.
     let summary = results.map(res => {  
         return { city: res.city, countryCode: res.countryCode,
         maxTemperature: getMaxTemperatureCelsius(res.list),
         minTemperature: getMinTemperatureCelsius(res.list),
         totalRainfall: getTotalRainFall(res.list)
     }});
-
+*/
+  
     // Group by date (local) and city
     let resultsGroupedByDateAndCity = {};
     results.forEach(result => {
@@ -65,7 +67,7 @@ async function getWeatherForCities() {
         let resultWithLowestTemperature = [...dailySummary].sort((resA, resB) => resA.minTemperature - resB.minTemperature)[0];
         let citiesWithRain = dailySummary.filter(res => res.totalRainfall).map(res => res.city);
 
-
+//  Pushing data to CSV file
         csvLines.push({
             day: date,
             highest: resultWithHighestTemperature.city,
@@ -73,7 +75,8 @@ async function getWeatherForCities() {
             rain: citiesWithRain.join(",")
         });
     }
-
+  
+// Create CSV header
     const csvWriter = createCsvWriter({
         path: 'weather.csv',
         header: [
@@ -83,12 +86,14 @@ async function getWeatherForCities() {
           {id: 'rain', title: 'Cities With Rain '},
         ]
       });
-    
+  
+//     Create CSV File 
       csvWriter
         .writeRecords(csvLines)
         .then(()=> console.log('The CSV file was written successfully'));
 }
 
+// Return Celsius
 function KelvinToCelsius(kelvin) {
     return (kelvin - 273.15);
 }
@@ -114,6 +119,7 @@ function getTotalRainFall(responseList) {
     return rain.reduce((sum, val) => sum + val, 0)
 }
 
+// Call the main function once the app is running
 getWeatherForCities();
 
 server.listen(port, () => {
